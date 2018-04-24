@@ -38,8 +38,7 @@ def gradientDescent(data, theta, ld, yl, ap, numIter):
 
     return theta
 
-def predict(new_x, new_y, theta):
-    predict_data = mapFeature(new_x, new_x)
+def predict(predict_data, theta):
     point = []
     for i in predict_data:
         point.append(sigmoid(i.dot(theta)))
@@ -75,6 +74,12 @@ if __name__ == "__main__":
         data = np.loadtxt(csvfile, delimiter=",")
         new_data = mapFeature(data[:,0], data[:,1])
 
+    # take some samples from training file
+    with open('test_LR.txt') as fin:
+        test = np.loadtxt(fin, delimiter=',')
+        test_data = mapFeature(test[:,0], test[:,1])
+        true_test = test[:,2]
+
     lambda_value = config['Lambda']
     alpha = config['Alpha']
     numiter = config['NumIter']
@@ -88,12 +93,13 @@ if __name__ == "__main__":
     with open('model.json', 'w') as outputFile:
         json.dump(output, outputFile)
 
-    x0_1 = np.linspace(-2, 2, num=50)
-    x0_2 = np.linspace(-2, 2, num=50)
-    graph = mapFeature(x0_1, x0_2)
-    y0 = graph * theta
-    plt.plot(data[:,0], data[:,1], 'ro')
-    plt.axis([-2, 2, -2, 2])
-    plt.plot(graph, y0)
-    plt.grid(True)
-    plt.show()
+    value_predict = predict(test_data, theta)
+    count_accuracy = 0
+    for c in range(len(value_predict)):
+        if (value_predict[c] >= 0.5 and true_test[c] == 1) or (value_predict[c] < 0.5 and true_test[c] == 0):
+            count_accuracy += 1
+
+    accuracy_value = {"Accuracy" : count_accuracy / len(true_test)}
+
+    with open('accuracy.json', 'w') as accFile:
+        json.dump(accuracy_value, accFile)
